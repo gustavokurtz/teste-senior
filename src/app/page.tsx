@@ -49,7 +49,7 @@ export default function Home() {
 
   // Carregar produtos mock
   useEffect(() => {
-    fetch('http://localhost:4000/products')
+    fetch('/api/products')
       .then(res => res.json())
       .then((data: Product[]) => {
         setProducts(data)
@@ -106,7 +106,7 @@ export default function Home() {
       imageUrl,
       category: ''
     }
-    const res = await fetch('http://localhost:4000/products', {
+    const res = await fetch('/api/products', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
@@ -226,7 +226,7 @@ export default function Home() {
 
           <button
             type="submit"
-            className="col-span-full bg-primary text-white py-3 rounded-lg hover:bg-blue-700 transition flex items-center justify-center space-x-2"
+            className="col-span-full bg-primary text-blue-700 py-3 rounded-lg flex items-center justify-center space-x-2"
           >
             <Plus className="w-5 h-5" />
             <span>Adicionar Produto</span>
