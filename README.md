@@ -104,17 +104,6 @@ const getBase64 = (file: File): Promise<string> => /* ... */
 
 ## Scripts disponíveis (package.json)
 
-```json
-"scripts": {
-  "json-server": "json-server --watch db.json --port 4000",
-  "dev": "concurrently \"npm run json-server\" \"next dev\"",
-  "build": "next build",
-  "start": "next start",
-  "lint": "next lint"
-}
-```
-
-* **npm run json-server**: inicia o mock em `localhost:4000`.
 * **npm run dev**: executa simultaneamente o mock e o Next.js em dev.
 * **npm run build/start**: gera build de produção.
 * **npm run lint**: verifica qualidade de código.
