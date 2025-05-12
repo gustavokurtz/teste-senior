@@ -1,36 +1,121 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MyStore
 
-## Getting Started
+Este projeto é um exemplo de aplicação em **Next.js** que implementa um catálogo de produtos com funcionalidades de:
 
-First, run the development server:
+* Exibição e carregamento de produtos (mock via **json-server**)
+* Formulário de adição de novos produtos com upload de imagem (drag & drop e file picker)
+* Geração de preview de imagem
+* Filtragem, ordenação e paginação de produtos
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Tecnologias utilizadas
+
+* **Next.js 15.3.2**: framework React com rotas automáticas e suporte a APIs.
+* **TypeScript**: tipagem estática para componentes e lógica.
+* **Tailwind CSS**: estilização utilitária.
+* **json-server**: mock de API REST para desenvolvimento.
+* **concurrently**: execução simultânea do servidor mock e do Next.js.
+* **lucide-react**: ícones vetoriais.
+
+## Como rodar o projeto
+
+1. Clone este repositório:
+
+   ```bash
+   git clone https://github.com/gustavokurtz/teste-senior.git
+   cd teste-senior
+   ```
+2. Instale as dependências:
+
+   ```bash
+   npm install
+   ```
+3. Inicie o servidor e a aplicação em modo de desenvolvimento:
+
+   ```bash
+   npm run dev
+   ```
+4. Abra o navegador em `http://localhost:3000` para ver a aplicação.
+
+## Estrutura e decisões de código
+
+### 1. Padrões de dados (Types)
+
+* **Product**: representa um produto carregado da API, com `id`, `name`, `category`, `price`, `description` e `imageUrl`.
+* **NewProduct**: usa `price` como `string` para permitir campo vazio antes da conversão, e `imageFile: File | null` para armazenar o arquivo de imagem.
+
+### 2. Estados principais (`useState`)
+
+* `products` e `loading`: controle do carregamento e armazenamento da lista de produtos.
+* `newProduct` e `preview`: valores do formulário e URL de preview da imagem.
+* Filtros (`filterName`, `minPrice`, `maxPrice`), ordenação (`sortField`, `sortOrder`) e paginação (`currentPage`).
+
+**Decisão**: separar cada aspecto (dados, UI e lógica) em estados claros para facilitar manutenção e escalabilidade.
+
+### 3. Carregamento de dados (`useEffect`)
+
+```ts
+useEffect(() => {
+  fetch('http://localhost:4000/products')
+    .then(res => res.json())
+    .then((data: Product[]) => {
+      setProducts(data)
+      setLoading(false)
+    })
+    .catch(console.error)
+}, [])
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+* **Mock API**: usamos o **json-server** para servir `db.json` em `http://localhost:4000/products`.
+* **Loading state**: exibe spinner enquanto aguarda resposta.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 4. Formulário e upload de imagem
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+* **Drag & drop**: `onDragOver` e `onDrop` capturam arquivos arrastados.
+* **File picker**: `input type="file"` escondido; `ref` e `onClick` no contêiner.
+* **Preview**: `URL.createObjectURL(file)` gera URL temporária para exibir a imagem antes de enviar.
+* **Limpeza do input**: `e.target.value = ''` no `handleFileChange` garante que selecionar o mesmo arquivo dispare `onChange` novamente.
 
-## Learn More
+### 5. Conversão para Base64 e envio
 
-To learn more about Next.js, take a look at the following resources:
+```ts
+const getBase64 = (file: File): Promise<string> => /* ... */
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+* Converte `File` em `data URL` para armazenar no mock.
+* No `handleAdd`, se há `imageFile`, converte antes de `POST` para `/products`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 6. Lógica de filtragem, ordenação e paginação
 
-## Deploy on Vercel
+* **Filtragem**: `.filter(p => ...)` verifica `name`, `minPrice` e `maxPrice`.
+* **Ordenação**: `.sort(...)` por `name` ou `price` em ordem asc/desc.
+* **Paginação**:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+  * `itemsPerPage = 6`
+  * calcula índices `firstIndex` e `lastIndex` e usa `.slice()`.
+  * controla navegação de páginas com botões.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Decisão**: lógica no cliente permite UX rápido sem chamadas adicionais.
+
+### 7. Interface (Tailwind CSS)
+
+* **Layout responsivo**: grid e utilitários responsivos (`sm:`, `md:`, `lg:`).
+* **Componentes reutilizáveis**: classes utilitárias e transições de hover.
+* **Spinner de loading**: simples `<div>` com animação CSS.
+
+## Scripts disponíveis (package.json)
+
+```json
+"scripts": {
+  "json-server": "json-server --watch db.json --port 4000",
+  "dev": "concurrently \"npm run json-server\" \"next dev\"",
+  "build": "next build",
+  "start": "next start",
+  "lint": "next lint"
+}
+```
+
+* **npm run json-server**: inicia o mock em `localhost:4000`.
+* **npm run dev**: executa simultaneamente o mock e o Next.js em dev.
+* **npm run build/start**: gera build de produção.
+* **npm run lint**: verifica qualidade de código.
+
